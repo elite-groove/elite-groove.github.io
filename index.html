@@ -36,28 +36,36 @@
         button:hover {
             opacity: 0.8;
         }
-        #storageContainer div {
+        #storageContainer div, #conversionResults div, #activationLog div {
             padding: 10px;
             border-bottom: 1px solid #ccc;
+        }
+        #activationLog {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <h1>Liquid Creation and Storage Lab</h1>
+        <h1>Liquid Lab</h1>
         <label for="liquidName">Liquid Name:</label>
         <input type="text" id="liquidName" required>
         <label for="liquidVolume">Volume (ml):</label>
         <input type="number" id="liquidVolume" required>
         <button onclick="storeLiquid()">Store Liquid</button>
         <button onclick="clearStorage()">Clear Storage</button>
+        <h2>Stored Liquids</h2>
         <div id="storageContainer"></div>
+        <h2>Conversion Results</h2>
+        <div id="conversionResults"></div>
+        <h2>Activation Log</h2>
+        <div id="activationLog"></div>
     </div>
 
     <script>
         function storeLiquid() {
             const name = document.getElementById('liquidName').value;
-            const volume = document.getElementById('liquidVolume').value;
+            const volume = parseInt(document.getElementById('liquidVolume').value);
             if (!name || !volume) {
                 alert('Please fill in all fields');
                 return;
@@ -66,14 +74,16 @@
             liquids.push({ name, volume });
             localStorage.setItem('liquids', JSON.stringify(liquids));
             displayStoredLiquids();
-            document.getElementById('liquidName').value = '';  // Clear input after saving
-            document.getElementById('liquidVolume').value = '';  // Clear input after saving
+            convertLiquid(name, volume);
+            checkActivation(volume);
+            document.getElementById('liquidName').value = '';
+            document.getElementById('liquidVolume').value = '';
         }
 
         function displayStoredLiquids() {
             const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
             const container = document.getElementById('storageContainer');
-            container.innerHTML = ''; // Clear previous display
+            container.innerHTML = '';
             liquids.forEach(liquid => {
                 const div = document.createElement('div');
                 div.textContent = `${liquid.name} - ${liquid.volume} ml`;
@@ -81,12 +91,32 @@
             });
         }
 
-        function clearStorage() {
-            localStorage.removeItem('liquids');
-            displayStoredLiquids();  // Update UI after clearing storage
+        function convertLiquid(name, volume) {
+            const resultsContainer = document.getElementById('conversionResults');
+            const pressureIncrease = (volume * 2.5).toFixed(2); // Simplified formula for demo
+            const resultDiv = document.createElement('div');
+            resultDiv.textContent = `Conversion for ${name}: Volume of ${volume} ml increases pressure by ${pressureIncrease} Pa.`;
+            resultsContainer.appendChild(resultDiv);
         }
 
-        window.onload = displayStoredLiquids;  // Display stored liquids on page load
+        function checkActivation(volume) {
+            const activationThreshold = 100; // Set a threshold volume for activation
+            const activationLog = document.getElementById('activationLog');
+            if (volume >= activationThreshold) {
+                const activationDiv = document.createElement('div');
+                activationDiv.textContent = `Activation triggered: Volume of ${volume} ml exceeds the threshold of ${activationThreshold} ml.`;
+                activationLog.appendChild(activationDiv);
+            }
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('liquids');
+            displayStoredLiquids();
+            document.getElementById('conversionResults').innerHTML = '';
+            document.getElementById('activationLog').innerHTML = '';
+        }
+
+        window.onload = displayStoredLiquids;
     </script>
 </body>
 </html>
