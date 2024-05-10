@@ -51,7 +51,7 @@
         <label for="liquidName">Liquid Name:</label>
         <input type="text" id="liquidName" required>
         <label for="liquidVolume">Volume (ml):</label>
-        <input type="number" id="liquidVolume" required>
+        <input type="number" id="liquidVolume" required placeholder="Enter volume as a number">
         <button onclick="storeLiquid()">Store Liquid</button>
         <button onclick="clearStorage()">Clear Storage</button>
         <h2>Stored Liquids</h2>
@@ -65,17 +65,17 @@
     <script>
         function storeLiquid() {
             const name = document.getElementById('liquidName').value;
-            const volume = parseInt(document.getElementById('liquidVolume').value);
-            if (!name || !volume) {
-                alert('Please fill in all fields');
+            const volume = document.getElementById('liquidVolume').value;
+            if (!name.trim() || isNaN(volume) || volume.trim() === '') {
+                alert('Please fill in all fields correctly. Volume must be a number.');
                 return;
             }
             const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
-            liquids.push({ name, volume });
+            liquids.push({ name, volume: parseFloat(volume) });
             localStorage.setItem('liquids', JSON.stringify(liquids));
             displayStoredLiquids();
-            convertLiquid(name, volume);
-            checkActivation(volume);
+            convertLiquid(name, parseFloat(volume));
+            checkActivation(parseFloat(volume));
             document.getElementById('liquidName').value = '';
             document.getElementById('liquidVolume').value = '';
         }
@@ -93,7 +93,7 @@
 
         function convertLiquid(name, volume) {
             const resultsContainer = document.getElementById('conversionResults');
-            const pressureIncrease = (volume * 2.5).toFixed(2); // Simplified formula for demo
+            const pressureIncrease = (volume * 2.5).toFixed(2);
             const resultDiv = document.createElement('div');
             resultDiv.textContent = `Conversion for ${name}: Volume of ${volume} ml increases pressure by ${pressureIncrease} Pa.`;
             resultsContainer.appendChild(resultDiv);
