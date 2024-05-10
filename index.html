@@ -1,98 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Media Storage Player</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Lab Program S</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .app-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: auto;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            margin: 5px 0 10px;
+            display: block;
+            width: calc(100% - 16px);
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        #storageContainer div {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
-<input type="file" id="fileInput" accept="audio/mp3, video/mp4" onchange="handleFileChange()">
-<audio id="audioPlayer" controls></audio>
-<video id="videoPlayer" controls width="320"></video>
+    <div class="app-container">
+        <h1>Liquid Creation and Storage Lab</h1>
+        <label for="liquidName">Liquid Name:</label>
+        <input type="text" id="liquidName" required>
+        <label for="liquidVolume">Volume (ml):</label>
+        <input type="number" id="liquidVolume" required>
+        <button onclick="storeLiquid()">Store Liquid</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+        <div id="storageContainer"></div>
+    </div>
 
-<script>
-  // Open (or create) the database
-  const openRequest = indexedDB.open('MediaDB', 1);
+    <script>
+        function storeLiquid() {
+            const name = document.getElementById('liquidName').value;
+            const volume = document.getElementById('liquidVolume').value;
+            if (!name || !volume) {
+                alert('Please fill in all fields');
+                return;
+            }
+            const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
+            liquids.push({ name, volume });
+            localStorage.setItem('liquids', JSON.stringify(liquids));
+            displayStoredLiquids();
+            document.getElementById('liquidName').value = '';  // Clear input after saving
+            document.getElementById('liquidVolume').value = '';  // Clear input after saving
+        }
 
-  openRequest.onupgradeneeded = function(e) {
-    const db = e.target.result;
-    if (!db.objectStoreNames.contains('media')) {
-      db.createObjectStore('media', { keyPath: 'id' });
-    }
-  };
+        function displayStoredLiquids() {
+            const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
+            const container = document.getElementById('storageContainer');
+            container.innerHTML = ''; // Clear previous display
+            liquids.forEach(liquid => {
+                const div = document.createElement('div');
+                div.textContent = `${liquid.name} - ${liquid.volume} ml`;
+                container.appendChild(div);
+            });
+        }
 
-  openRequest.onerror = function(e) {
-    console.error('Error opening database:', e.target.errorCode);
-  };
+        function clearStorage() {
+            localStorage.removeItem('liquids');
+            displayStoredLiquids();  // Update UI after clearing storage
+        }
 
-  function handleFileChange() {
-    const fileInput = document.getElementById('fileInput');
-    const files = fileInput.files;
-    if (files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const arrayBuffer = reader.result;
-        storeData(file.name, arrayBuffer, file.type);
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  }
-
-  function storeData(name, data, type) {
-    const transaction = openRequest.result.transaction('media', 'readwrite');
-    const store = transaction.objectStore('media');
-    const request = store.put({id: name, data: data, type: type});
-    request.onsuccess = function() {
-      console.log('File stored:', name);
-      loadData(name);
-    };
-    request.onerror = function(e) {
-      console.error('Error storing file:', e.target.errorCode);
-    };
-  }
-
-  // Existing setup...
-
-function loadNextMedia(currentName) {
-  const transaction = openRequest.result.transaction('media', 'readonly');
-  const store = transaction.objectStore('media');
-  const getAllKeysRequest = store.getAllKeys();
-  getAllKeysRequest.onsuccess = function() {
-    const keys = getAllKeysRequest.result;
-    let currentIndex = keys.indexOf(currentName);
-    let nextIndex = currentIndex + 1;
-    if (nextIndex >= keys.length) {
-      nextIndex = 0; // Loop back to the first file
-    }
-    loadData(keys[nextIndex]); // Load the next file
-  };
-}
-
-function loadData(name) {
-  const transaction = openRequest.result.transaction('media', 'readonly');
-  const store = transaction.objectStore('media');
-  const request = store.get(name);
-  request.onsuccess = function(e) {
-    const record = e.target.result;
-    if (record.type.startsWith('audio')) {
-      const audioPlayer = document.getElementById('audioPlayer');
-      audioPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
-      audioPlayer.load();
-      audioPlayer.play();
-      audioPlayer.onended = () => loadNextMedia(name); // When one ends, load the next
-    } else if (record.type.startsWith('video')) {
-      const videoPlayer = document.getElementById('videoPlayer');
-      videoPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
-      videoPlayer.load();
-      videoPlayer.play();
-      videoPlayer.onended = () => loadNextMedia(name); // When one ends, load the next
-    }
-  };
-  request.onerror = function(e) {
-    console.error('Error loading file:', e.target.errorCode);
-  };
-}
-</script>
+        window.onload = displayStoredLiquids;  // Display stored liquids on page load
+    </script>
 </body>
 </html>
