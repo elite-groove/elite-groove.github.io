@@ -52,28 +52,47 @@
     };
   }
 
-  function loadData(name) {
-    const transaction = openRequest.result.transaction('media', 'readonly');
-    const store = transaction.objectStore('media');
-    const request = store.get(name);
-    request.onsuccess = function(e) {
-      const record = e.target.result;
-      if (record.type.startsWith('audio')) {
-        const audioPlayer = document.getElementById('audioPlayer');
-        audioPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
-        audioPlayer.load();
-        audioPlayer.play();
-      } else if (record.type.startsWith('video')) {
-        const videoPlayer = document.getElementById('videoPlayer');
-        videoPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
-        videoPlayer.load();
-        videoPlayer.play();
-      }
-    };
-    request.onerror = function(e) {
-      console.error('Error loading file:', e.target.errorCode);
-    };
-  }
+  // Existing setup...
+
+function loadNextMedia(currentName) {
+  const transaction = openRequest.result.transaction('media', 'readonly');
+  const store = transaction.objectStore('media');
+  const getAllKeysRequest = store.getAllKeys();
+  getAllKeysRequest.onsuccess = function() {
+    const keys = getAllKeysRequest.result;
+    let currentIndex = keys.indexOf(currentName);
+    let nextIndex = currentIndex + 1;
+    if (nextIndex >= keys.length) {
+      nextIndex = 0; // Loop back to the first file
+    }
+    loadData(keys[nextIndex]); // Load the next file
+  };
+}
+
+function loadData(name) {
+  const transaction = openRequest.result.transaction('media', 'readonly');
+  const store = transaction.objectStore('media');
+  const request = store.get(name);
+  request.onsuccess = function(e) {
+    const record = e.target.result;
+    if (record.type.startsWith('audio')) {
+      const audioPlayer = document.getElementById('audioPlayer');
+      audioPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
+      audioPlayer.load();
+      audioPlayer.play();
+      audioPlayer.onended = () => loadNextMedia(name); // When one ends, load the next
+    } else if (record.type.startsWith('video')) {
+      const videoPlayer = document.getElementById('videoPlayer');
+      videoPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
+      videoPlayer.load();
+      videoPlayer.play();
+      videoPlayer.onended = () => loadNextMedia(name); // When one ends, load the next
+    }
+  };
+  request.onerror = function(e) {
+    console.error('Error loading file:', e.target.errorCode);
+  };
+}
 </script>
 </body>
 </html>
