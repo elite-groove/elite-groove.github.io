@@ -9,18 +9,16 @@
   body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
   .player-container { background: #f0f0f0; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 10px; }
   ion-range { width: 100%; }
+  video, audio { width: 100%; max-width: 320px; controls: true; }
 </style>
 </head>
 <body>
 <div class="player-container">
   <ion-item>
     <ion-label>Load Media</ion-label>
-    <ion-input id="fileInput" type="file" accept="audio/*, video/*"></ion-input>
+    <ion-input id="fileInput" type="file" accept="audio/*,video/*"></ion-input>
   </ion-item>
-  <video id="mediaPlayer" width="320" height="240" controls>
-    <source src="" type="">
-    Your browser does not support the video tag.
-  </video>
+  <video id="mediaPlayer" controls></video>
   <ion-item>
     <ion-label>Volume</ion-label>
     <ion-range id="volumeControl" min="0" max="100" value="100"></ion-range>
@@ -33,6 +31,7 @@
 <script>
   const mediaPlayer = document.getElementById('mediaPlayer');
   const volumeControl = document.getElementById('volumeControl');
+  
   volumeControl.addEventListener('ionChange', e => {
     mediaPlayer.volume = e.detail.value / 100;
   });
@@ -44,7 +43,11 @@
       const file = files[0];
       mediaPlayer.src = URL.createObjectURL(file);
       mediaPlayer.type = file.type;
-      mediaPlayer.play();
+      mediaPlayer.load(); // Ensure to reload the source
+      mediaPlayer.play()
+        .catch(e => {
+          document.getElementById('feedbackCenter').innerHTML = "Error playing file: " + e.message;
+        });
       const crekS = 'Playing ' + file.name; // Updated to use 'crekS'
       document.getElementById('feedbackCenter').innerHTML = crekS;
     }
