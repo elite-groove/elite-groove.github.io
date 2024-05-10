@@ -3,25 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+<title>Media Player with IC7 Chip Concept</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.css">
+<style>
+  body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+  .player-container { background: #f0f0f0; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 10px; }
+  ion-range { width: 100%; }
+</style>
 </head>
-<body style="height: 900px;">
-<input type="text" id="userInput" class="input is-danger" placeholder="Enter ID">
-      <button onclick="logID()" class="button is-danger">Log ID</button>
-  <div id="app" class="section">
-  <div class="container">
-
-    <div style="overflow-y: auto; height: 900px;" id="log"></div>
-  </div>
+<body>
+<div class="player-container">
+  <ion-item>
+    <ion-label>Load Media</ion-label>
+    <ion-input id="fileInput" type="file" accept="audio/*, video/*"></ion-input>
+  </ion-item>
+  <video id="mediaPlayer" width="320" height="240" controls>
+    <source src="" type="">
+    Your browser does not support the video tag.
+  </video>
+  <ion-item>
+    <ion-label>Volume</ion-label>
+    <ion-range id="volumeControl" min="0" max="100" value="100"></ion-range>
+  </ion-item>
+  <ion-button expand="block" onclick="playMedia()">Play</ion-button>
+  <div id="feedbackCenter"></div>
 </div>
-<script src="script.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-    });
+  const mediaPlayer = document.getElementById('mediaPlayer');
+  const volumeControl = document.getElementById('volumeControl');
+  volumeControl.addEventListener('ionChange', e => {
+    mediaPlayer.volume = e.detail.value / 100;
+  });
+
+  function playMedia() {
+    const fileInput = document.getElementById('fileInput');
+    const files = fileInput.files;
+    if (files.length > 0) {
+      const file = files[0];
+      mediaPlayer.src = URL.createObjectURL(file);
+      mediaPlayer.type = file.type;
+      mediaPlayer.play();
+      const crekS = 'Playing ' + file.name; // Updated to use 'crekS'
+      document.getElementById('feedbackCenter').innerHTML = crekS;
+    }
   }
 </script>
 </body>
