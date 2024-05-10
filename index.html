@@ -3,52 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Media Player</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.css">
-<style>
-  body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-  .player-container { background: #f0f0f0; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 10px; }
-  ion-range { width: 100%; }
-  video { width: 100%; max-width: 320px; controls: true; }
-</style>
+<title>Media Storage Player</title>
 </head>
 <body>
-<div class="player-container">
-  <ion-item>
-    <ion-label>Load Media</ion-label>
-    <ion-input id="fileInput" type="file" accept="video/*,audio/*"></ion-input>
-  </ion-item>
-  <video id="mediaPlayer" controls></video>
-  <ion-item>
-    <ion-label>Volume</ion-label>
-    <ion-range id="volumeControl" min="0" max="100" value="100"></ion-range>
-  </ion-item>
-  <ion-button expand="block" onclick="playMedia()">Play</ion-button>
-  <div id="feedbackCenter"></div>
-</div>
+<input type="file" id="fileInput" accept="audio/mp3, video/mp4" onchange="handleFileChange()">
+<audio id="audioPlayer" controls></audio>
+<video id="videoPlayer" controls width="320"></video>
 
-<script src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
 <script>
-  const mediaPlayer = document.getElementById('mediaPlayer');
-  const volumeControl = document.getElementById('volumeControl');
-  
-  volumeControl.addEventListener('ionChange', e => {
-    mediaPlayer.volume = e.detail.value / 100;
-  });
+  // Open (or create) the database
+  const openRequest = indexedDB.open('MediaDB', 1);
 
-  function playMedia() {
+  openRequest.onupgradeneeded = function(e) {
+    const db = e.target.result;
+    if (!db.objectStoreNames.contains('media')) {
+      db.createObjectStore('media', { keyPath: 'id' });
+    }
+  };
+
+  openRequest.onerror = function(e) {
+    console.error('Error opening database:', e.target.errorCode);
+  };
+
+  function handleFileChange() {
     const fileInput = document.getElementById('fileInput');
     const files = fileInput.files;
     if (files.length > 0) {
       const file = files[0];
-      mediaPlayer.src = URL.createObjectURL(file);
-      mediaPlayer.type = file.type;
-      mediaPlayer.load(); // Important to load the media
-      mediaPlayer.play().catch(e => {
-        document.getElementById('feedbackCenter').innerHTML = "Error playing file: " + e.message;
-      });
-      document.getElementById('feedbackCenter').innerHTML = 'Playing ' + file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const arrayBuffer = reader.result;
+        storeData(file.name, arrayBuffer, file.type);
+      };
+      reader.readAsArrayBuffer(file);
     }
+  }
+
+  function storeData(name, data, type) {
+    const transaction = openRequest.result.transaction('media', 'readwrite');
+    const store = transaction.objectStore('media');
+    const request = store.put({id: name, data: data, type: type});
+    request.onsuccess = function() {
+      console.log('File stored:', name);
+      loadData(name);
+    };
+    request.onerror = function(e) {
+      console.error('Error storing file:', e.target.errorCode);
+    };
+  }
+
+  function loadData(name) {
+    const transaction = openRequest.result.transaction('media', 'readonly');
+    const store = transaction.objectStore('media');
+    const request = store.get(name);
+    request.onsuccess = function(e) {
+      const record = e.target.result;
+      if (record.type.startsWith('audio')) {
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
+        audioPlayer.load();
+        audioPlayer.play();
+      } else if (record.type.startsWith('video')) {
+        const videoPlayer = document.getElementById('videoPlayer');
+        videoPlayer.src = URL.createObjectURL(new Blob([record.data], {type: record.type}));
+        videoPlayer.load();
+        videoPlayer.play();
+      }
+    };
+    request.onerror = function(e) {
+      console.error('Error loading file:', e.target.errorCode);
+    };
   }
 </script>
 </body>
