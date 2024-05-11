@@ -3,71 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oscillator Media Player with EQ Stats</title>
+<title>Native JavaScript Audio Player with Oscillator Tuning</title>
 <style>
   /* CSS for styling */
   body {
     font-family: Arial, sans-serif;
     text-align: center;
   }
-  #eqStats {
-    margin-top: 20px;
-    font-weight: bold;
+  #audioPlayer {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    display: block;
   }
-  .eqBar {
-    width: 2px;
-    background-color: blue;
-    display: inline-block;
-    margin-right: 1px;
+  #frequencyInput {
+    margin-top: 20px;
   }
 </style>
 </head>
 <body>
-<!-- HTML structure for the media player and EQ stats -->
-<h1>Oscillator Media Player</h1>
-<audio id="audioPlayer" controls></audio>
-<div id="eqStats"></div>
+<!-- HTML structure for audio element and oscillator frequency input -->
+<h1>Native JavaScript Audio Player with Oscillator Tuning</h1>
+<audio id="audioPlayer" controls loop>
+  <source src="example_audio.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+<div>
+  <label for="frequencyInput">Oscillator Frequency (Hz):</label>
+  <input type="number" id="frequencyInput" value="440">
+  <button id="tuneButton">Tune Oscillator</button>
+</div>
 
-<!-- JavaScript for controlling oscillator and displaying EQ stats -->
+<!-- JavaScript for controlling oscillator and tuning -->
 <script>
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  const analyser = audioCtx.createAnalyser();
-
-  // Connect nodes
-  oscillator.connect(gainNode);
-  gainNode.connect(analyser);
-  analyser.connect(audioCtx.destination);
-
-  // Start oscillator
-  oscillator.start();
-
-  // Set up audio player
   const audioPlayer = document.getElementById('audioPlayer');
-  const source = audioCtx.createMediaElementSource(audioPlayer);
-  source.connect(analyser);
+  const context = new AudioContext();
+  const oscillator = context.createOscillator();
+  oscillator.connect(context.destination);
 
-  // Update EQ stats
-  function updateEQStats() {
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    analyser.getByteFrequencyData(dataArray);
-    const eqStatsDiv = document.getElementById('eqStats');
-    eqStatsDiv.innerHTML = '';
-    dataArray.forEach(value => {
-      const bar = document.createElement('div');
-      bar.className = 'eqBar';
-      bar.style.height = `${value}px`;
-      eqStatsDiv.appendChild(bar);
-    });
-    requestAnimationFrame(updateEQStats);
+  // Function to update oscillator frequency
+  function updateOscillatorFrequency() {
+    const frequencyInput = document.getElementById('frequencyInput');
+    const frequency = parseFloat(frequencyInput.value);
+    if (!isNaN(frequency)) {
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    }
   }
-
-  // Call updateEQStats function to update EQ stats
-  updateEQStats();
 
   // Example: load audio file
   audioPlayer.src = 'example_audio.mp3';
+
+  // Event listener for tuning button click
+  const tuneButton = document.getElementById('tuneButton');
+  tuneButton.addEventListener('click', updateOscillatorFrequency);
 </script>
 </body>
 </html>
