@@ -1,122 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Lab</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        .app-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: auto;
-        }
-        input[type="text"], input[type="number"] {
-            padding: 8px;
-            margin: 5px 0 10px;
-            display: block;
-            width: calc(100% - 16px);
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-        button:hover {
-            opacity: 0.8;
-        }
-        #storageContainer div, #conversionResults div, #activationLog div {
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-        #activationLog {
-            margin-top: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oscillator Media Player with EQ Stats</title>
+<style>
+  /* CSS for styling */
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  #eqStats {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  .eqBar {
+    width: 2px;
+    background-color: blue;
+    display: inline-block;
+    margin-right: 1px;
+  }
+</style>
 </head>
 <body>
-    <div class="app-container">
-        <h1>Liquid Lab</h1>
-        <label for="liquidName">Liquid Name:</label>
-        <input type="text" id="liquidName" required>
-        <label for="liquidVolume">Volume (ml):</label>
-        <input type="number" id="liquidVolume" required placeholder="Enter volume as a number">
-        <button onclick="storeLiquid()">Store Liquid</button>
-        <button onclick="clearStorage()">Clear Storage</button>
-        <h2>Stored Liquids</h2>
-        <div id="storageContainer"></div>
-        <h2>Conversion Results</h2>
-        <div id="conversionResults"></div>
-        <h2>Activation Log</h2>
-        <div id="activationLog"></div>
-    </div>
+<!-- HTML structure for the media player and EQ stats -->
+<h1>Oscillator Media Player</h1>
+<audio id="audioPlayer" controls></audio>
+<div id="eqStats"></div>
 
-    <script>
-        function storeLiquid() {
-            const name = document.getElementById('liquidName').value;
-            const volume = document.getElementById('liquidVolume').value;
-            if (!name.trim() || isNaN(volume) || volume.trim() === '') {
-                alert('Please fill in all fields correctly. Volume must be a number.');
-                return;
-            }
-            const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
-            liquids.push({ name, volume: parseFloat(volume) });
-            localStorage.setItem('liquids', JSON.stringify(liquids));
-            displayStoredLiquids();
-            convertLiquid(name, parseFloat(volume));
-            checkActivation(parseFloat(volume));
-            document.getElementById('liquidName').value = '';
-            document.getElementById('liquidVolume').value = '';
-        }
+<!-- JavaScript for controlling oscillator and displaying EQ stats -->
+<script>
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  const analyser = audioCtx.createAnalyser();
 
-        function displayStoredLiquids() {
-            const liquids = JSON.parse(localStorage.getItem('liquids') || '[]');
-            const container = document.getElementById('storageContainer');
-            container.innerHTML = '';
-            liquids.forEach(liquid => {
-                const div = document.createElement('div');
-                div.textContent = `${liquid.name} - ${liquid.volume} ml`;
-                container.appendChild(div);
-            });
-        }
+  // Connect nodes
+  oscillator.connect(gainNode);
+  gainNode.connect(analyser);
+  analyser.connect(audioCtx.destination);
 
-        function convertLiquid(name, volume) {
-            const resultsContainer = document.getElementById('conversionResults');
-            const pressureIncrease = (volume * 2.5).toFixed(2);
-            const resultDiv = document.createElement('div');
-            resultDiv.textContent = `Conversion for ${name}: Volume of ${volume} ml increases pressure by ${pressureIncrease} Pa.`;
-            resultsContainer.appendChild(resultDiv);
-        }
+  // Start oscillator
+  oscillator.start();
 
-        function checkActivation(volume) {
-            const activationThreshold = 100; // Set a threshold volume for activation
-            const activationLog = document.getElementById('activationLog');
-            if (volume >= activationThreshold) {
-                const activationDiv = document.createElement('div');
-                activationDiv.textContent = `Activation triggered: Volume of ${volume} ml exceeds the threshold of ${activationThreshold} ml.`;
-                activationLog.appendChild(activationDiv);
-            }
-        }
+  // Set up audio player
+  const audioPlayer = document.getElementById('audioPlayer');
+  const source = audioCtx.createMediaElementSource(audioPlayer);
+  source.connect(analyser);
 
-        function clearStorage() {
-            localStorage.removeItem('liquids');
-            displayStoredLiquids();
-            document.getElementById('conversionResults').innerHTML = '';
-            document.getElementById('activationLog').innerHTML = '';
-        }
+  // Update EQ stats
+  function updateEQStats() {
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(dataArray);
+    const eqStatsDiv = document.getElementById('eqStats');
+    eqStatsDiv.innerHTML = '';
+    dataArray.forEach(value => {
+      const bar = document.createElement('div');
+      bar.className = 'eqBar';
+      bar.style.height = `${value}px`;
+      eqStatsDiv.appendChild(bar);
+    });
+    requestAnimationFrame(updateEQStats);
+  }
 
-        window.onload = displayStoredLiquids;
-    </script>
+  // Call updateEQStats function to update EQ stats
+  updateEQStats();
+
+  // Example: load audio file
+  audioPlayer.src = 'example_audio.mp3';
+</script>
 </body>
 </html>
