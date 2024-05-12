@@ -19,6 +19,7 @@
         <label for="movieInput">Load Movie (ISO):</label>
         <input type="file" id="movieInput" accept=".iso">
         <button onclick="playMovie()">Play Movie</button>
+        <input type="checkbox" id="loopMovie" checked> Loop playback
     </div>
 
     <!-- Audio Player -->
@@ -26,22 +27,27 @@
         <label for="audioInput">Load Audio:</label>
         <input type="file" id="audioInput" accept="audio/*">
         <button onclick="playAudio()">Play Audio</button>
+        <input type="checkbox" id="loopAudio" checked> Loop playback
     </div>
 
     <script>
         // Inline JavaScript
         function playMovie() {
             var file = document.getElementById('movieInput').files[0];
-            // Process and play the movie file (mock function)
-            console.log('Playing movie:', file.name);
-            // Integrate with backend or database to store/load the movie details
+            var loop = document.getElementById('loopMovie').checked;
+            console.log('Playing movie:', file.name, 'Loop:', loop);
+            // Additional backend integration might include:
+            // Sending the file to the server for storage
+            // Storing file name and loop preference in NextDB
         }
 
         function playAudio() {
             var file = document.getElementById('audioInput').files[0];
-            // Process and play the audio file (mock function)
-            console.log('Playing audio:', file.name);
-            // Integrate with backend or database to store/load the audio details
+            var loop = document.getElementById('loopAudio').checked;
+            console.log('Playing audio:', file.name, 'Loop:', loop);
+            // Additional backend integration might include:
+            // Sending the file to the server for storage
+            // Storing file name and loop preference in NextDB
         }
     </script>
 </body>
