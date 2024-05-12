@@ -1,64 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Upload and Store Audio/Video in IndexedDB</title>
-<script>
-  // JavaScript code
-  // Function to initialize IndexedDB
-  function initDB() {
-    let request = window.indexedDB.open('fileDB', 1);
-
-    request.onerror = function(event) {
-      console.log("Error opening database.");
-    };
-
-    request.onupgradeneeded = function(event) {
-      let db = event.target.result;
-      let objectStore = db.createObjectStore('files', { keyPath: 'id', autoIncrement:true });
-      console.log("Database initialized.");
-    };
-  }
-
-  // Function to handle file upload
-  function handleFileUpload(event) {
-    let files = event.target.files;
-    let db = window.indexedDB.open('fileDB', 1);
-
-    db.onsuccess = function(event) {
-      let database = event.target.result;
-      let transaction = database.transaction(['files'], 'readwrite');
-      let objectStore = transaction.objectStore('files');
-
-      for(let i = 0; i < files.length; i++) {
-        let file = files[i];
-        let fileEntry = { file: file };
-
-        let addRequest = objectStore.add(fileEntry);
-        addRequest.onsuccess = function(event) {
-          console.log("File added to IndexedDB.");
-        };
-        addRequest.onerror = function(event) {
-          console.log("Error adding file to IndexedDB.");
-        };
-      }
-    };
-
-    db.onerror = function(event) {
-      console.log("Error opening database.");
-    };
-  }
-
-  // Initialize IndexedDB when the document is ready
-  document.addEventListener('DOMContentLoaded', function() {
-    initDB();
-  });
-
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuner Chip</title>
+    <style>
+        /* Inline CSS */
+        body { font-family: Arial, sans-serif; }
+        #moviePlayer, #audioPlayer { margin-top: 20px; }
+    </style>
 </head>
 <body>
-  <!-- HTML code -->
-  <input type="file" id="fileInput" multiple onchange="handleFileUpload(event)">
+    <h1>Tuner Chip</h1>
+    <p>Description: A digital media player that handles movies and audio.</p>
+
+    <!-- Movie Player -->
+    <div id="moviePlayer">
+        <label for="movieInput">Load Movie (ISO):</label>
+        <input type="file" id="movieInput" accept=".iso">
+        <button onclick="playMovie()">Play Movie</button>
+    </div>
+
+    <!-- Audio Player -->
+    <div id="audioPlayer">
+        <label for="audioInput">Load Audio:</label>
+        <input type="file" id="audioInput" accept="audio/*">
+        <button onclick="playAudio()">Play Audio</button>
+    </div>
+
+    <script>
+        // Inline JavaScript
+        function playMovie() {
+            var file = document.getElementById('movieInput').files[0];
+            // Process and play the movie file (mock function)
+            console.log('Playing movie:', file.name);
+            // Integrate with backend or database to store/load the movie details
+        }
+
+        function playAudio() {
+            var file = document.getElementById('audioInput').files[0];
+            // Process and play the audio file (mock function)
+            console.log('Playing audio:', file.name);
+            // Integrate with backend or database to store/load the audio details
+        }
+    </script>
 </body>
 </html>
