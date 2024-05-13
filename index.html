@@ -3,51 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tuner Chip</title>
+    <title>Linux Mint Red Media Player</title>
     <style>
-        /* Inline CSS */
-        body { font-family: Arial, sans-serif; }
-        #moviePlayer, #audioPlayer { margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282828;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        header {
+            background-color: #a83232;
+            padding: 20px;
+        }
+        main {
+            padding: 20px;
+        }
+        footer {
+            background-color: #a83232;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        #mediaPlayer {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #383838;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        #mediaPlayer video, #mediaPlayer audio {
+            width: 100%;
+            outline: none;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #a83232;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>Tuner Chip</h1>
-    <p>Description: A digital media player that handles movies and audio.</p>
-
-    <!-- Movie Player -->
-    <div id="moviePlayer">
-        <label for="movieInput">Load Movie (ISO):</label>
-        <input type="file" id="movieInput" accept=".iso">
-        <button onclick="playMovie()">Play Movie</button>
-        <input type="checkbox" id="loopMovie" checked> Loop playback
-    </div>
-
-    <!-- Audio Player -->
-    <div id="audioPlayer">
-        <label for="audioInput">Load Audio:</label>
-        <input type="file" id="audioInput" accept="audio/*">
-        <button onclick="playAudio()">Play Audio</button>
-        <input type="checkbox" id="loopAudio" checked> Loop playback
-    </div>
+    <header>
+        <h1>Linux Mint Red Media Player</h1>
+    </header>
+    <main>
+        <div id="mediaPlayer">
+            <video id="videoPlayer" controls>
+                Your browser does not support the video tag.
+            </video>
+            <audio id="audioPlayer" controls>
+                Your browser does not support the audio tag.
+            </audio>
+            <div id="controls">
+                <input type="file" id="fileInput" accept="audio/*,video/*" multiple>
+                <button onclick="playMedia()">Play Media</button>
+                <button onclick="loopMedia()">Loop Current</button>
+                <button onclick="sequenceLoop()">Sequence Loop</button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Linux Mint Red. All Rights Reserved.</p>
+    </footer>
 
     <script>
-        // Inline JavaScript
-        function playMovie() {
-            var file = document.getElementById('movieInput').files[0];
-            var loop = document.getElementById('loopMovie').checked;
-            console.log('Playing movie:', file.name, 'Loop:', loop);
-            // Additional backend integration might include:
-            // Sending the file to the server for storage
-            // Storing file name and loop preference in NextDB
+        const fileInput = document.getElementById('fileInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        let mediaFiles = [];
+        let currentIndex = 0;
+        let isSequenceLoop = false;
+
+        function playMedia() {
+            mediaFiles = Array.from(fileInput.files);
+            currentIndex = 0;
+            playCurrentMedia();
         }
 
-        function playAudio() {
-            var file = document.getElementById('audioInput').files[0];
-            var loop = document.getElementById('loopAudio').checked;
-            console.log('Playing audio:', file.name, 'Loop:', loop);
-            // Additional backend integration might include:
-            // Sending the file to the server for storage
-            // Storing file name and loop preference in NextDB
+        function playCurrentMedia() {
+            if (mediaFiles.length > 0) {
+                const file = mediaFiles[currentIndex];
+                const url = URL.createObjectURL(file);
+                const isVideo = file.type.startsWith('video');
+                videoPlayer.style.display = isVideo ? 'block' : 'none';
+                audioPlayer.style.display = !isVideo ? 'block' : 'none';
+
+                if (isVideo) {
+                    videoPlayer.src = url;
+                    videoPlayer.play();
+                } else {
+                    audioPlayer.src = url;
+                    audioPlayer.play();
+                }
+            }
+        }
+
+        function loopMedia() {
+            if (videoPlayer.style.display === 'block') {
+                videoPlayer.loop = true;
+                audioPlayer.loop = false;
+            } else {
+                videoPlayer.loop = false;
+                audioPlayer.loop = true;
+            }
+        }
+
+        function sequenceLoop() {
+            isSequenceLoop = true;
+            videoPlayer.loop = false;
+            audioPlayer.loop = false;
+
+            if (videoPlayer.style.display === 'block') {
+                videoPlayer.onended = playNextMedia;
+            } else {
+                audioPlayer.onended = playNextMedia;
+            }
+        }
+
+        function playNextMedia() {
+            if (isSequenceLoop) {
+                currentIndex = (currentIndex + 1) % mediaFiles.length;
+                playCurrentMedia();
+            }
         }
     </script>
 </body>
