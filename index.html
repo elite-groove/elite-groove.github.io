@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Program: D Class S</title>
+    <title>Linux Mint Red Program: D Class S</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,6 +12,9 @@
             margin: 0;
             padding: 0;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         header {
             background-color: #a83232;
@@ -19,13 +22,16 @@
         }
         main {
             padding: 20px;
+            flex: 1;
+            overflow: auto;
         }
         footer {
             background-color: #a83232;
             padding: 10px;
-            position: fixed;
-            width: 100%;
+            position: sticky;
             bottom: 0;
+            width: 100%;
+            flex-shrink: 0;
         }
         #program {
             width: 100%;
@@ -93,7 +99,7 @@
 </head>
 <body>
     <header>
-        <h1>Program: D Class S</h1>
+        <h1>Linux Mint Red Program: D Class S</h1>
     </header>
     <main>
         <div id="program">
