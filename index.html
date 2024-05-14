@@ -61,6 +61,34 @@
             padding: 10px;
             border-radius: 5px;
         }
+        #knowledgeForm input, #knowledgeForm textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #a83232;
+            background-color: #282828;
+            color: #f0f0f0;
+        }
+        #knowledgeForm button {
+            width: 100%;
+        }
+        #lab {
+            margin-top: 20px;
+            text-align: left;
+        }
+        #labForm input, #labForm textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #a83232;
+            background-color: #282828;
+            color: #f0f0f0;
+        }
+        #labForm button {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -85,14 +113,23 @@
         <div id="knowledgeBase">
             <h2>Knowledge Base</h2>
             <div id="knowledgeContent">
-                <!-- knowledge items -->
-                <div class="knowledge-item">
-                   <h1>Chip</h1>
-                    <h3>ISO PLAYER</h3>
-                    <p>ISO: ALL</p>
-
-                    <div>Insert ISO</div>
-                </div>
+                <!-- Knowledge items will be dynamically added here -->
+            </div>
+            <form id="knowledgeForm" onsubmit="addKnowledge(event)">
+                <input type="text" id="titleInput" placeholder="Title" required>
+                <textarea id="contentInput" placeholder="Content" required></textarea>
+                <button type="submit">Add Knowledge</button>
+            </form>
+        </div>
+        <div id="lab">
+            <h2>Lab (^%^INFINITYOVO%LAB)</h2>
+            <form id="labForm" onsubmit="addLabKnowledge(event)">
+                <input type="text" id="labTitleInput" placeholder="Experiment Title" required>
+                <textarea id="labContentInput" placeholder="Experiment Details" required></textarea>
+                <button type="submit">Add Lab Knowledge</button>
+            </form>
+            <div id="labContent">
+                <!-- Lab experiment results will be dynamically added here -->
             </div>
         </div>
     </main>
@@ -105,9 +142,118 @@
         const videoPlayer = document.getElementById('videoPlayer');
         const audioPlayer = document.getElementById('audioPlayer');
         const knowledgeContent = document.getElementById('knowledgeContent');
+        const labContent = document.getElementById('labContent');
+        const titleInput = document.getElementById('titleInput');
+        const contentInput = document.getElementById('contentInput');
+        const labTitleInput = document.getElementById('labTitleInput');
+        const labContentInput = document.getElementById('labContentInput');
         let mediaFiles = [];
         let currentIndex = 0;
         let isSequenceLoop = false;
+        let db;
+
+        // Initialize IndexedDB
+        function initDB() {
+            let request = indexedDB.open("KnowledgeDB", 1);
+
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                let objectStore = db.createObjectStore("knowledge", { keyPath: "id", autoIncrement: true });
+                objectStore.createIndex("title", "title", { unique: false });
+                objectStore.createIndex("content", "content", { unique: false });
+                objectStore.createIndex("tag", "tag", { unique: false });
+            };
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                fetchKnowledge();
+                fetchLabKnowledge();
+            };
+
+            request.onerror = function(event) {
+                console.error("Database error: " + event.target.errorCode);
+            };
+        }
+
+        function addKnowledge(event) {
+            event.preventDefault();
+            let title = titleInput.value;
+            let content = contentInput.value;
+            let transaction = db.transaction(["knowledge"], "readwrite");
+            let objectStore = transaction.objectStore("knowledge");
+
+            let newItem = { title, content, tag: "knowledge" };
+            objectStore.add(newItem);
+
+            transaction.oncomplete = function() {
+                fetchKnowledge();
+                titleInput.value = '';
+                contentInput.value = '';
+            };
+
+            transaction.onerror = function(event) {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        function addLabKnowledge(event) {
+            event.preventDefault();
+            let title = labTitleInput.value;
+            let content = labContentInput.value;
+            let transaction = db.transaction(["knowledge"], "readwrite");
+            let objectStore = transaction.objectStore("knowledge");
+
+            let newItem = { title, content, tag: "^%^INFINITYOVO%LAB" };
+            objectStore.add(newItem);
+
+            transaction.oncomplete = function() {
+                fetchLabKnowledge();
+                labTitleInput.value = '';
+                labContentInput.value = '';
+            };
+
+            transaction.onerror = function(event) {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        function fetchKnowledge() {
+            let transaction = db.transaction(["knowledge"], "readonly");
+            let objectStore = transaction.objectStore("knowledge");
+
+            let request = objectStore.getAll();
+
+            request.onsuccess = function(event) {
+                knowledgeContent.innerHTML = "";
+                request.result.forEach(item => {
+                    if (item.tag === "knowledge") {
+                        let div = document.createElement("div");
+                        div.className = "knowledge-item";
+                        div.innerHTML = `<h3>${item.title}</h3><p>${item.content}</p><p>Tag: ${item.tag}</p>`;
+                        knowledgeContent.appendChild(div);
+                    }
+                });
+            };
+        }
+
+        function fetchLabKnowledge() {
+            let transaction = db.transaction(["knowledge"], "readonly");
+            let objectStore = transaction.objectStore("knowledge");
+
+            let request = objectStore.getAll();
+
+            request.onsuccess = function(event) {
+                labContent.innerHTML = "";
+                request.result.forEach(item => {
+                    if (item.tag === "^%^INFINITYOVO%LAB") {
+                        let div = document.createElement("div");
+                        div.className = "knowledge-item";
+                        div.innerHTML = `<h3>${item.title}</h3><p>${item.content}</p><p>Tag: ${item.tag}</p>`;
+                        labContent.appendChild(div);
+                    }
+                });
+            };
+        }
 
         function playMedia() {
             mediaFiles = Array.from(fileInput.files);
@@ -161,6 +307,8 @@
                 playCurrentMedia();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', initDB);
     </script>
 </body>
 </html>
