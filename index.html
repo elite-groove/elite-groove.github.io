@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kickspot</title>
+    <title>Program: D Class S</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +27,7 @@
             width: 100%;
             bottom: 0;
         }
-        #mediaPlayer {
+        #program {
             width: 100%;
             max-width: 800px;
             margin: 20px auto;
@@ -35,7 +35,7 @@
             border-radius: 10px;
             padding: 20px;
         }
-        #mediaPlayer video, #mediaPlayer audio {
+        #program video, #program audio {
             width: 100%;
             outline: none;
         }
@@ -51,14 +51,24 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        #knowledgeBase {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .knowledge-item {
+            background-color: #383838;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>ISO CONSOLE - ISF LEXUS 350</h1>
+        <h1>Program: D Class S</h1>
     </header>
     <main>
-        <div id="mediaPlayer">
+        <div id="program">
             <video id="videoPlayer" controls>
                 Your browser does not support the video tag.
             </video>
@@ -67,9 +77,23 @@
             </audio>
             <div id="controls">
                 <input type="file" id="fileInput" accept="audio/*,video/*" multiple>
-                <button onclick="playMedia()">Play Media</button>
+                <button onclick="playMedia()">Play</button>
                 <button onclick="loopMedia()">Loop Current</button>
                 <button onclick="sequenceLoop()">Sequence Loop</button>
+            </div>
+        </div>
+        <div id="knowledgeBase">
+            <h2>Knowledge Base</h2>
+            <div id="knowledgeContent">
+                <!-- Sample knowledge items -->
+                <div class="knowledge-item">
+                    <h3>Sample Title 1</h3>
+                    <p>Sample Content 1</p>
+                </div>
+                <div class="knowledge-item">
+                    <h3>Sample Title 2</h3>
+                    <p>Sample Content 2</p>
+                </div>
             </div>
         </div>
     </main>
@@ -81,6 +105,7 @@
         const fileInput = document.getElementById('fileInput');
         const videoPlayer = document.getElementById('videoPlayer');
         const audioPlayer = document.getElementById('audioPlayer');
+        const knowledgeContent = document.getElementById('knowledgeContent');
         let mediaFiles = [];
         let currentIndex = 0;
         let isSequenceLoop = false;
