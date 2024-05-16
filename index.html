@@ -3,68 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Variable Interface</title>
+    <title>Lab Interface with Local DB and Media Player</title>
     <style>
-        /* Inline CSS for styling */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background: #fff;
+            background-color: #f0f0f0;
+            margin: 0;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .label {
+        .lab-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .variable-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+            width: 150px;
+        }
+        .variable-label {
             font-size: 1.2em;
             margin-bottom: 10px;
         }
-        .value {
+        .variable-value {
             font-size: 1.5em;
             font-weight: bold;
+            margin-bottom: 10px;
         }
-        .button {
+        .variable-button {
             display: inline-block;
-            padding: 10px 20px;
-            margin-top: 20px;
-            font-size: 1em;
+            padding: 5px 10px;
+            font-size: 0.9em;
             color: #fff;
             background: #007bff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
+        .sync-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .media-player {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="label">Variable a:</div>
-    <div id="variable-value" class="value"></div>
-    <button class="button" onclick="updateVariable()">Update Variable</button>
-</div>
+<h1>Lab Interface with Local DB and Media Player</h1>
+<div id="lab-container" class="lab-container"></div>
+<button class="sync-button" onclick="syncVariables()">Sync Variables</button>
+<video class="media-player" id="media-player" controls loop>
+    <source src="path/to/your/media.iso" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 
 <script>
-    // Inline JavaScript for chip syntax functionality
+    // Initialize variables
+    let variables = {};
 
-    // Define the variable in a chip-like syntax
-    let chip = {
-        variable_a: 'seven'
-    };
-
-    // Function to update the variable value in the UI
-    function updateVariable() {
-        chip.variable_a = prompt("Enter new value for variable a:", chip.variable_a);
-        document.getElementById('variable-value').innerText = chip.variable_a;
+    // Load variables from localStorage
+    function loadVariables() {
+        const storedVariables = localStorage.getItem('variables');
+        if (storedVariables) {
+            variables = JSON.parse(storedVariables);
+        } else {
+            for (let i = 1; i <= 1000; i++) {
+                variables[`s${i}`] = '[ h e r e ]';
+            }
+        }
     }
 
-    // Initialize the UI with the variable's value
-    document.getElementById('variable-value').innerText = chip.variable_a;
+    // Save variables to localStorage
+    function saveVariables() {
+        localStorage.setItem('variables', JSON.stringify(variables));
+    }
+
+    // Function to create and inject variable elements
+    function createAndInjectVariables() {
+        const container = document.getElementById('lab-container');
+        for (let i = 1; i <= 1000; i++) {
+            const variableContainer = document.createElement('div');
+            variableContainer.className = 'variable-container';
+
+            const label = document.createElement('div');
+            label.className = 'variable-label';
+            label.innerText = `Variable s${i}:`;
+
+            const value = document.createElement('div');
+            value.className = 'variable-value';
+            value.innerText = variables[`s${i}`];
+
+            const button = document.createElement('button');
+            button.className = 'variable-button';
+            button.innerText = 'Update';
+            button.onclick = () => updateVariable(i);
+
+            variableContainer.appendChild(label);
+            variableContainer.appendChild(value);
+            variableContainer.appendChild(button);
+
+            container.appendChild(variableContainer);
+        }
+    }
+
+    // Function to update a specific variable's value
+    function updateVariable(index) {
+        const newValue = prompt(`Enter new value for variable s${index}:`, variables[`s${index}`]);
+        if (newValue !== null) {
+            variables[`s${index}`] = newValue;
+            const valueElement = document.querySelector(`.variable-container:nth-child(${index}) .variable-value`);
+            valueElement.innerText = newValue;
+            saveVariables();
+        }
+    }
+
+    // Function to sync variables and log JSON
+    function syncVariables() {
+        const jsonString = JSON.stringify(variables, null, 2);
+        console.log('Synchronized Variables:', jsonString);
+        alert('Variables synchronized! Check the console for the JSON.');
+    }
+
+    // Initialize the UI with 1000 variable elements
+    loadVariables();
+    createAndInjectVariables();
 </script>
 
 </body>
