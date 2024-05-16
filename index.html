@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Interface with Local DB and Media Player</title>
+    <title>Lab Interface with Media Player and Tuners</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.16.13/antd.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +21,7 @@
             justify-content: center;
             gap: 10px;
         }
-        .variable-container {
+        .tuner-container {
             background: #fff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -28,24 +29,10 @@
             text-align: center;
             width: 150px;
         }
-        .variable-label {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-        .variable-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .variable-button {
-            display: inline-block;
-            padding: 5px 10px;
-            font-size: 0.9em;
-            color: #fff;
-            background: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        .media-player {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
         }
         .sync-button {
             margin-top: 20px;
@@ -57,93 +44,111 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .media-player {
-            margin-top: 20px;
-            width: 80%;
-            max-width: 600px;
+        .tuner-button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 0.9em;
+            color: #fff;
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<h1>Lab Interface with Local DB and Media Player</h1>
+<h1>Lab Interface with Media Player and Tuners</h1>
 <div id="lab-container" class="lab-container"></div>
-<button class="sync-button" onclick="syncVariables()">Sync Variables</button>
-<video class="media-player" id="media-player" controls loop>
-    <source src="path/to/your/media.iso" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
+<button class="sync-button" onclick="syncTuners()">Sync Tuners</button>
 
+<div>
+    <video class="media-player" id="video-player" controls loop></video>
+    <audio class="media-player" id="audio-player" controls loop></audio>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.16.13/antd.min.js"></script>
 <script>
-    // Initialize variables
-    let variables = {};
+    // Initialize tuners
+    let tuners = {};
 
-    // Load variables from localStorage
-    function loadVariables() {
-        const storedVariables = localStorage.getItem('variables');
-        if (storedVariables) {
-            variables = JSON.parse(storedVariables);
+    // Load tuners from localStorage
+    function loadTuners() {
+        const storedTuners = localStorage.getItem('tuners');
+        if (storedTuners) {
+            tuners = JSON.parse(storedTuners);
         } else {
-            for (let i = 1; i <= 1000; i++) {
-                variables[`s${i}`] = '[ h e r e ]';
+            for (let i = 1; i <= 10000; i++) {
+                tuners[`tuner${i}`] = { video: '', audio: '' };
             }
         }
     }
 
-    // Save variables to localStorage
-    function saveVariables() {
-        localStorage.setItem('variables', JSON.stringify(variables));
+    // Save tuners to localStorage
+    function saveTuners() {
+        localStorage.setItem('tuners', JSON.stringify(tuners));
     }
 
-    // Function to create and inject variable elements
-    function createAndInjectVariables() {
+    // Function to create and inject tuner elements
+    function createAndInjectTuners() {
         const container = document.getElementById('lab-container');
-        for (let i = 1; i <= 1000; i++) {
-            const variableContainer = document.createElement('div');
-            variableContainer.className = 'variable-container';
+        for (let i = 1; i <= 10000; i++) {
+            const tunerContainer = document.createElement('div');
+            tunerContainer.className = 'tuner-container';
 
             const label = document.createElement('div');
-            label.className = 'variable-label';
-            label.innerText = `Variable s${i}:`;
+            label.innerText = `Tuner ${i}`;
 
-            const value = document.createElement('div');
-            value.className = 'variable-value';
-            value.innerText = variables[`s${i}`];
+            const videoInput = document.createElement('input');
+            videoInput.type = 'text';
+            videoInput.placeholder = 'Video URL';
+            videoInput.value = tuners[`tuner${i}`].video;
+            videoInput.onchange = (event) => {
+                tuners[`tuner${i}`].video = event.target.value;
+                saveTuners();
+            };
 
-            const button = document.createElement('button');
-            button.className = 'variable-button';
-            button.innerText = 'Update';
-            button.onclick = () => updateVariable(i);
+            const audioInput = document.createElement('input');
+            audioInput.type = 'text';
+            audioInput.placeholder = 'Audio URL';
+            audioInput.value = tuners[`tuner${i}`].audio;
+            audioInput.onchange = (event) => {
+                tuners[`tuner${i}`].audio = event.target.value;
+                saveTuners();
+            };
 
-            variableContainer.appendChild(label);
-            variableContainer.appendChild(value);
-            variableContainer.appendChild(button);
+            const updateButton = document.createElement('button');
+            updateButton.className = 'tuner-button';
+            updateButton.innerText = 'Update Media';
+            updateButton.onclick = () => updateMediaPlayer(i);
 
-            container.appendChild(variableContainer);
+            tunerContainer.appendChild(label);
+            tunerContainer.appendChild(videoInput);
+            tunerContainer.appendChild(audioInput);
+            tunerContainer.appendChild(updateButton);
+
+            container.appendChild(tunerContainer);
         }
     }
 
-    // Function to update a specific variable's value
-    function updateVariable(index) {
-        const newValue = prompt(`Enter new value for variable s${index}:`, variables[`s${index}`]);
-        if (newValue !== null) {
-            variables[`s${index}`] = newValue;
-            const valueElement = document.querySelector(`.variable-container:nth-child(${index}) .variable-value`);
-            valueElement.innerText = newValue;
-            saveVariables();
-        }
+    // Function to update the media player with selected tuner's media
+    function updateMediaPlayer(index) {
+        const videoPlayer = document.getElementById('video-player');
+        const audioPlayer = document.getElementById('audio-player');
+        videoPlayer.src = tuners[`tuner${index}`].video;
+        audioPlayer.src = tuners[`tuner${index}`].audio;
     }
 
-    // Function to sync variables and log JSON
-    function syncVariables() {
-        const jsonString = JSON.stringify(variables, null, 2);
-        console.log('Synchronized Variables:', jsonString);
-        alert('Variables synchronized! Check the console for the JSON.');
+    // Function to sync tuners and log JSON
+    function syncTuners() {
+        const jsonString = JSON.stringify(tuners, null, 2);
+        console.log('Synchronized Tuners:', jsonString);
+        alert('Tuners synchronized! Check the console for the JSON.');
     }
 
-    // Initialize the UI with 1000 variable elements
-    loadVariables();
-    createAndInjectVariables();
+    // Initialize the UI with 10,000 tuner elements
+    loadTuners();
+    createAndInjectTuners();
 </script>
 
 </body>
