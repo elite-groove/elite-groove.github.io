@@ -3,169 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S E V E N ISO Player</title>
+    <title>HTML ISO Media Player with Ambiences</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #1a1a1a;
-            color: #fff;
             font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
             margin: 0;
+            padding: 0;
         }
-        .player {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #333;
-            padding: 20px;
+        .player-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #111;
             border-radius: 10px;
-            position: relative;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        video, audio {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
         }
         .controls {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
+            margin-top: 10px;
         }
-        .button {
-            background: #007bff;
-            border: none;
-            color: #fff;
+        .controls button, .controls input, .controls textarea {
             padding: 10px 20px;
-            margin: 0 10px;
+            margin: 5px;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
+            color: #fff;
         }
-        .button:hover {
-            background: #0056b3;
+        .controls input, .controls textarea {
+            width: calc(100% - 30px);
+            background-color: #222;
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 2s linear infinite;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .cinematic { background-color: #333; }
+        .elegant { background-color: #555; }
+        .luxurious { background-color: #777; }
+        .ambient-sounds {
             display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .equalizer {
-            display: flex;
-            align-items: flex-end;
-            height: 100px;
-            width: 200px;
-            margin-top: 20px;
-        }
-        .bar {
-            width: 10px;
-            height: 50px;
-            background-color: red;
-            margin: 0 2px;
-            animation: bounce 1s infinite ease-in-out;
-        }
-        @keyframes bounce {
-            0%, 100% {
-                transform: scaleY(1);
-            }
-            50% {
-                transform: scaleY(0.5);
-            }
         }
     </style>
 </head>
 <body>
-    <div class="player">
-        <h1>S E V E N ISO Player</h1>
-        <audio id="audio" controls loop>
-            <source src="your-audio-file.mp3" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-        <div class="controls">
-            <button class="button" onclick="playAudio()">Play</button>
-            <button class="button" onclick="pauseAudio()">Pause</button>
-            <input type="file" id="fileInput" multiple onchange="handleFiles(this.files)">
-        </div>
-        <div class="loader" id="loader"></div>
-        <div class="equalizer" id="equalizer">
-            <div class="bar" style="animation-delay: 0s;"></div>
-            <div class="bar" style="animation-delay: 0.1s;"></div>
-            <div class="bar" style="animation-delay: 0.2s;"></div>
-            <div class="bar" style="animation-delay: 0.3s;"></div>
-            <div class="bar" style="animation-delay: 0.4s;"></div>
-            <div class="bar" style="animation-delay: 0.5s;"></div>
-            <div class="bar" style="animation-delay: 0.6s;"></div>
-        </div>
+
+<div class="player-container" id="player-container">
+    <video id="media-player" controls>
+        Your browser does not support the video tag.
+    </video>
+    <div class="controls">
+        <button onclick="changeMedia()">Change Media</button>
+        <input type="file" id="file-input" accept="audio/*,video/*" onchange="loadFile(event)">
+        <button onclick="toggleLoop()">Toggle Loop</button>
+        <button onclick="setEnvironment('cinematic')">Cinematic</button>
+        <button onclick="setEnvironment('elegant')">Elegant</button>
+        <button onclick="setEnvironment('luxurious')">Luxurious</button>
+        <button onclick="activateAmbientSound()">Activate Ambient Sound</button>
+        <input type="file" id="ambient-file-input" accept="audio/*" onchange="loadAmbientSound(event)">
+        <textarea id="environment-input" placeholder="Enter your environment description"></textarea>
+        <button onclick="setCustomEnvironment()">Set Custom Environment</button>
+        <textarea id="contacts-input" placeholder="Enter your contacts"></textarea>
+        <button onclick="saveContacts()">Save Contacts</button>
+        <button onclick="createProgram()">Create Program</button>
     </div>
-    <script>
-        const audio = document.getElementById('audio');
-        const equalizer = document.getElementById('equalizer');
-        const bars = equalizer.getElementsByClassName('bar');
-        const loader = document.getElementById('loader');
+    <audio id="ambient-sounds" loop></audio>
+</div>
 
-        function playAudio() {
-            audio.play();
-            updateEqualizer();
+<script>
+    const mediaPlayer = document.getElementById('media-player');
+    const playerContainer = document.getElementById('player-container');
+    const ambientSounds = document.getElementById('ambient-sounds');
+    const fileInput = document.getElementById('file-input');
+    const ambientFileInput = document.getElementById('ambient-file-input');
+
+    // Load saved settings from local storage
+    window.onload = function() {
+        if (localStorage.getItem('mediaSource')) {
+            mediaPlayer.setAttribute('src', localStorage.getItem('mediaSource'));
         }
-
-        function pauseAudio() {
-            audio.pause();
+        if (localStorage.getItem('loop') === 'true') {
+            mediaPlayer.loop = true;
         }
+        if (localStorage.getItem('customEnvironment')) {
+            playerContainer.innerHTML = localStorage.getItem('customEnvironment');
+        }
+        if (localStorage.getItem('ambientSoundSource')) {
+            ambientSounds.setAttribute('src', localStorage.getItem('ambientSoundSource'));
+        }
+    };
 
-        function updateEqualizer() {
-            const array = new Uint8Array(bars.length);
-            for (let i = 0; i < bars.length; i++) {
-                array[i] = Math.random() * 255;
-                bars[i].style.height = array[i] + 'px';
+    function changeMedia() {
+        const mediaSource = prompt('Enter the URL of the media file:');
+        if (mediaSource) {
+            const fileExtension = mediaSource.split('.').pop().toLowerCase();
+            if (['mp4', 'webm', 'ogg', 'mp3', 'wav'].includes(fileExtension)) {
+                mediaPlayer.setAttribute('src', mediaSource);
+                mediaPlayer.load();
+                saveMediaSource(mediaSource);
+            } else {
+                alert('Unsupported file format!');
             }
-            if (!audio.paused) {
-                requestAnimationFrame(updateEqualizer);
-            }
         }
+    }
 
-        function handleFiles(files) {
-            loader.style.display = 'block';
-            setTimeout(() => {
-                loader.style.display = 'none';
-                const file = files[0];
-                const url = URL.createObjectURL(file);
-                audio.src = url;
-                playAudio();
-                saveToLocalDB(file);
-            }, 1000);
+    function loadFile(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            mediaPlayer.setAttribute('src', url);
+            mediaPlayer.load();
+            saveMediaSource(url);
         }
+    }
 
-        function saveToLocalDB(file) {
-            const dbRequest = indexedDB.open('SEVEN_DB', 1);
+    function toggleLoop() {
+        mediaPlayer.loop = !mediaPlayer.loop;
+        saveLoopSetting(mediaPlayer.loop);
+        alert('Loop ' + (mediaPlayer.loop ? 'enabled' : 'disabled'));
+    }
 
-            dbRequest.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                db.createObjectStore('files', { keyPath: 'name' });
-            };
+    function setEnvironment(env) {
+        playerContainer.classList.remove('cinematic', 'elegant', 'luxurious');
+        playerContainer.classList.add(env);
+    }
 
-            dbRequest.onsuccess = function(event) {
-                const db = event.target.result;
-                const transaction = db.transaction(['files'], 'readwrite');
-                const store = transaction.objectStore('files');
-                store.put({ name: file.name, data: file });
-
-                transaction.oncomplete = function() {
-                    console.log('File saved to local DB.');
-                };
-            };
-
-            dbRequest.onerror = function(event) {
-                console.error('Database error:', event.target.errorCode);
-            };
+    function loadAmbientSound(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            ambientSounds.setAttribute('src', url);
+            ambientSounds.load();
+            saveAmbientSoundSource(url);
         }
-    </script>
+    }
+
+    function activateAmbientSound() {
+        ambientSounds.play();
+    }
+
+    function saveMediaSource(source) {
+        localStorage.setItem('mediaSource', source);
+    }
+
+    function saveLoopSetting(loop) {
+        localStorage.setItem('loop', loop);
+    }
+
+    function saveAmbientSoundSource(source) {
+        localStorage.setItem('ambientSoundSource', source);
+    }
+
+    function setCustomEnvironment() {
+        const environmentDescription = document.getElementById('environment-input').value;
+        playerContainer.innerHTML += `<div>${environmentDescription}</div>`;
+        localStorage.setItem('customEnvironment', playerContainer.innerHTML);
+    }
+
+    function saveContacts() {
+        const contacts = document.getElementById('contacts-input').value;
+        localStorage.setItem('contacts', contacts);
+        alert('Contacts saved.');
+    }
+
+    function createProgram() {
+        const programCode = prompt('Enter your program code:');
+        if (programCode) {
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.text = programCode;
+            document.body.appendChild(script);
+            alert('Program created.');
+        }
+    }
+
+    function changeRealityCassette(command) {
+        const commands = {
+            'CINEMATIC': 'cinematic',
+            'ELEGANT': 'elegant',
+            'LUXURIOUS': 'luxurious'
+        };
+        if(commands[command.toUpperCase()]) {
+            setEnvironment(commands[command.toUpperCase()]);
+        } else {
+            alert('Unknown command!');
+        }
+    }
+
+    // Example of ASCII command input (simulated thought-based commands)
+    document.addEventListener('keydown', function(event) {
+        if(event.ctrlKey && event.key === 'Enter') {
+            const command = prompt('Enter your ASCII code command:');
+            changeRealityCassette(command);
+        }
+    });
+
+</script>
+
 </body>
 </html>
