@@ -3,205 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML ISO Media Player with Ambiences</title>
+    <title>Geometric Data Solver</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        .player-container {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #111;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        video, audio {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }
-        .controls {
-            margin-top: 10px;
-        }
-        .controls button, .controls input, .controls textarea {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: #fff;
-        }
-        .controls input, .controls textarea {
-            width: calc(100% - 30px);
-            background-color: #222;
-        }
-        .cinematic { background-color: #333; }
-        .elegant { background-color: #555; }
-        .luxurious { background-color: #777; }
-        .ambient-sounds {
-            display: none;
-        }
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; margin: 0; }
+        .container { text-align: center; }
+        canvas { border: 1px solid #ccc; margin-top: 20px; }
+        input[type="text"], button { padding: 10px; margin: 10px; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
-
-<div class="player-container" id="player-container">
-    <video id="media-player" controls>
-        Your browser does not support the video tag.
-    </video>
-    <div class="controls">
-        <button onclick="changeMedia()">Change Media</button>
-        <input type="file" id="file-input" accept="audio/*,video/*" onchange="loadFile(event)">
-        <button onclick="toggleLoop()">Toggle Loop</button>
-        <button onclick="setEnvironment('cinematic')">Cinematic</button>
-        <button onclick="setEnvironment('elegant')">Elegant</button>
-        <button onclick="setEnvironment('luxurious')">Luxurious</button>
-        <button onclick="activateAmbientSound()">Activate Ambient Sound</button>
-        <input type="file" id="ambient-file-input" accept="audio/*" onchange="loadAmbientSound(event)">
-        <textarea id="environment-input" placeholder="Enter your environment description"></textarea>
-        <button onclick="setCustomEnvironment()">Set Custom Environment</button>
-        <textarea id="contacts-input" placeholder="Enter your contacts"></textarea>
-        <button onclick="saveContacts()">Save Contacts</button>
-        <button onclick="createProgram()">Create Program</button>
-    </div>
-    <audio id="ambient-sounds" loop></audio>
+<div class="container">
+    <h1>Geometric Data Solver</h1>
+    <input type="text" id="inputData" placeholder="Enter geometric data">
+    <button onclick="solveProblem()">Solve</button>
+    <canvas id="animationCanvas" width="500" height="500"></canvas>
 </div>
-
 <script>
-    const mediaPlayer = document.getElementById('media-player');
-    const playerContainer = document.getElementById('player-container');
-    const ambientSounds = document.getElementById('ambient-sounds');
-    const fileInput = document.getElementById('file-input');
-    const ambientFileInput = document.getElementById('ambient-file-input');
+    const canvas = document.getElementById('animationCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // Load saved settings from local storage
-    window.onload = function() {
-        if (localStorage.getItem('mediaSource')) {
-            mediaPlayer.setAttribute('src', localStorage.getItem('mediaSource'));
-        }
-        if (localStorage.getItem('loop') === 'true') {
-            mediaPlayer.loop = true;
-        }
-        if (localStorage.getItem('customEnvironment')) {
-            playerContainer.innerHTML = localStorage.getItem('customEnvironment');
-        }
-        if (localStorage.getItem('ambientSoundSource')) {
-            ambientSounds.setAttribute('src', localStorage.getItem('ambientSoundSource'));
-        }
-    };
-
-    function changeMedia() {
-        const mediaSource = prompt('Enter the URL of the media file:');
-        if (mediaSource) {
-            const fileExtension = mediaSource.split('.').pop().toLowerCase();
-            if (['mp4', 'webm', 'ogg', 'mp3', 'wav'].includes(fileExtension)) {
-                mediaPlayer.setAttribute('src', mediaSource);
-                mediaPlayer.load();
-                saveMediaSource(mediaSource);
-            } else {
-                alert('Unsupported file format!');
-            }
-        }
-    }
-
-    function loadFile(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            mediaPlayer.setAttribute('src', url);
-            mediaPlayer.load();
-            saveMediaSource(url);
-        }
-    }
-
-    function toggleLoop() {
-        mediaPlayer.loop = !mediaPlayer.loop;
-        saveLoopSetting(mediaPlayer.loop);
-        alert('Loop ' + (mediaPlayer.loop ? 'enabled' : 'disabled'));
-    }
-
-    function setEnvironment(env) {
-        playerContainer.classList.remove('cinematic', 'elegant', 'luxurious');
-        playerContainer.classList.add(env);
-    }
-
-    function loadAmbientSound(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            ambientSounds.setAttribute('src', url);
-            ambientSounds.load();
-            saveAmbientSoundSource(url);
-        }
-    }
-
-    function activateAmbientSound() {
-        ambientSounds.play();
-    }
-
-    function saveMediaSource(source) {
-        localStorage.setItem('mediaSource', source);
-    }
-
-    function saveLoopSetting(loop) {
-        localStorage.setItem('loop', loop);
-    }
-
-    function saveAmbientSoundSource(source) {
-        localStorage.setItem('ambientSoundSource', source);
-    }
-
-    function setCustomEnvironment() {
-        const environmentDescription = document.getElementById('environment-input').value;
-        playerContainer.innerHTML += `<div>${environmentDescription}</div>`;
-        localStorage.setItem('customEnvironment', playerContainer.innerHTML);
-    }
-
-    function saveContacts() {
-        const contacts = document.getElementById('contacts-input').value;
-        localStorage.setItem('contacts', contacts);
-        alert('Contacts saved.');
-    }
-
-    function createProgram() {
-        const programCode = prompt('Enter your program code:');
-        if (programCode) {
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.text = programCode;
-            document.body.appendChild(script);
-            alert('Program created.');
-        }
-    }
-
-    function changeRealityCassette(command) {
-        const commands = {
-            'CINEMATIC': 'cinematic',
-            'ELEGANT': 'elegant',
-            'LUXURIOUS': 'luxurious'
-        };
-        if(commands[command.toUpperCase()]) {
-            setEnvironment(commands[command.toUpperCase()]);
+    function solveProblem() {
+        const inputData = document.getElementById('inputData').value;
+        const data = parseInput(inputData);
+        if (data) {
+            animateSolution(data);
         } else {
-            alert('Unknown command!');
+            alert('Invalid input data');
         }
     }
 
-    // Example of ASCII command input (simulated thought-based commands)
-    document.addEventListener('keydown', function(event) {
-        if(event.ctrlKey && event.key === 'Enter') {
-            const command = prompt('Enter your ASCII code command:');
-            changeRealityCassette(command);
+    function parseInput(input) {
+        try {
+            return JSON.parse(input);
+        } catch (e) {
+            return null;
         }
-    });
+    }
 
+    function animateSolution(data) {
+        const shapes = data.shapes || [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        shapes.forEach(shape => {
+            drawShape(shape);
+        });
+    }
+
+    function drawShape(shape) {
+        ctx.beginPath();
+        switch (shape.type) {
+            case 'circle':
+                ctx.arc(shape.x, shape.y, shape.radius, 0, 2 * Math.PI);
+                break;
+            case 'rectangle':
+                ctx.rect(shape.x, shape.y, shape.width, shape.height);
+                break;
+            case 'line':
+                ctx.moveTo(shape.x1, shape.y1);
+                ctx.lineTo(shape.x2, shape.y2);
+                break;
+            default:
+                break;
+        }
+        ctx.stroke();
+    }
+
+    // Example data for initial animation
+    const exampleData = {
+        shapes: [
+            { type: 'circle', x: 150, y: 150, radius: 50 },
+            { type: 'rectangle', x: 50, y: 50, width: 100, height: 50 },
+            { type: 'line', x1: 200, y1: 200, x2: 300, y2: 300 }
+        ]
+    };
+    animateSolution(exampleData);
 </script>
-
 </body>
 </html>
